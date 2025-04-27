@@ -1,5 +1,6 @@
 from builtins import Exception, bool, classmethod, int, str
 from datetime import datetime, timezone
+from fastapi import HTTPException
 import secrets
 from typing import Optional, Dict, List
 from pydantic import ValidationError
@@ -57,13 +58,13 @@ class UserService:
             existing_user = await cls.get_by_email(session, validated_data['email'])
             if existing_user:
                 logger.error("User with given email already exists.")
-                return None
+                raise HTTPException(status_code=400, detail="Email already exists.")
 
             # Check for provided nickname
             provided_nickname = validated_data.get('nickname')
             if provided_nickname:
                 if await cls.get_by_nickname(session, provided_nickname):
-                    raise ValueError("Nickname already exists. Please try a different one.")
+                    raise HTTPException(status_code=400, detail="Nickname already exists. Please try a different one.")
                 nickname = provided_nickname
             else:
                 nickname = generate_nickname()
@@ -82,19 +83,30 @@ class UserService:
                 new_user.email_verified = True
             else:
                 new_user.verification_token = generate_verification_token()
-                await email_service.send_verification_email(new_user)
 
             session.add(new_user)
             await session.commit()
+            await session.refresh(new_user)  # Ensure user.id is available
+
+            # ✅ Now it's safe to send the verification email
+            if new_user.role != UserRole.ADMIN:
+                await email_service.send_verification_email(new_user)
+
+            logger.info(f"User created: {new_user.email} ({new_user.role})")
             return new_user
 
         except ValidationError as e:
             logger.error(f"Validation error during user creation: {e}")
             return None
 
-        except ValueError as ve:
-            logger.warning(f"User creation failed: {ve}")
-            raise HTTPException(status_code=400, detail=str(ve))
+        except HTTPException as ve:
+            logger.warning(f"User creation failed: {ve.detail}")
+            raise ve
+
+        except Exception as e:
+            logger.exception("Unexpected error during user creation")
+            raise HTTPException(status_code=500, detail="An unexpected error occurred during user creation.")
+
 
 
     @classmethod
