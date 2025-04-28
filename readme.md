@@ -120,7 +120,7 @@ Version control with Git became an essential part of my workflow, teaching me be
 
 The course strengthened my grasp of object-oriented programming (OOP), helping me build modular, reusable code. Exposure to Agile methodologies further taught me how to work iteratively and adapt to changing requirements. Learning SQL and ORM patterns added another valuable skill set, enabling me to bridge application logic with efficient database design.
 
-One of the biggest takeaways was improving my problem-solving skills — learning to debug effectively, research independently, and persist through technical challenges.
+One of the biggest takeaways was improving my problem-solving skills  learning to debug effectively, research independently, and persist through technical challenges.
 
 Overall, this course provided a strong, practical education in Python and web development, integrating tools like VS Code, Pytest, and REST APIs. Most importantly, it built a resilient, solution-focused mindset that will be critical in my future career in data programming and backend development.
 
