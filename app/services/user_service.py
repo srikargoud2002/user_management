@@ -16,11 +16,79 @@ from uuid import UUID
 from app.services.email_service import EmailService
 from app.models.user_model import UserRole
 import logging
+from datetime import date
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
+from sqlalchemy import and_
+
 class UserService:
+
+    @classmethod
+    async def search_users(
+        cls,
+        session: AsyncSession,
+        skip: int = 0,
+        limit: int = 10,
+        email: Optional[str] = None,
+        nickname: Optional[str] = None,
+        role: Optional[UserRole] = None,
+        is_locked: Optional[bool] = None,
+        is_professional: Optional[bool] = None,
+        registered_from: Optional[date] = None,
+        registered_to: Optional[date] = None,
+        sort_by: str = "created_at",
+        order: str = "desc"
+    ) -> tuple[int, List[User]]:
+
+        filters = []
+
+        if email:
+            filters.append(User.email.ilike(f"%{email}%"))
+        if nickname:
+            filters.append(User.nickname.ilike(f"%{nickname}%"))
+        if role:
+            filters.append(User.role == role)
+        if is_locked is not None:
+            filters.append(User.is_locked == is_locked)
+        if is_professional is not None:
+            filters.append(User.is_professional == is_professional)
+        if registered_from:
+            filters.append(User.created_at >= registered_from)
+        if registered_to:
+            filters.append(User.created_at <= registered_to)
+
+        # Allowlist of sortable fields
+        sort_columns = {
+            "email": User.email,
+            "nickname": User.nickname,
+            "created_at": User.created_at,
+            "updated_at": User.updated_at,
+            "first_name": User.first_name,
+            "last_name": User.last_name
+        }
+
+        # Fallback to created_at if sort_by is invalid
+        sort_column = sort_columns.get(sort_by, User.created_at)
+        sort_expr = sort_column.desc() if order.lower() == "desc" else sort_column.asc()
+
+        try:
+            query = select(User).where(and_(*filters)).order_by(sort_expr).offset(skip).limit(limit)
+            total_query = select(func.count()).select_from(User).where(and_(*filters))
+
+            result = await cls._execute_query(session, query)
+            total_result = await session.execute(total_query)
+
+            users = result.scalars().all() if result else []
+            total_count = total_result.scalar()
+
+            return total_count, users
+
+        except Exception as e:
+            logger.error(f"Search users failed: {e}")
+            return 0, []
+
     @classmethod
     async def _execute_query(cls, session: AsyncSession, query):
         try:

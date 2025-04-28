@@ -17,6 +17,7 @@ Key Highlights:
 - Implements HATEOAS by generating dynamic links for user-related actions, enhancing API discoverability.
 - Utilizes OAuth2PasswordBearer for securing API endpoints, requiring valid access tokens for operations.
 """
+from app.models.user_model import UserRole
 
 from builtins import dict, int, len, str
 from datetime import timedelta
@@ -192,32 +193,52 @@ async def create_user(user: UserCreate, request: Request, db: AsyncSession = Dep
     )
 
 
+from typing import Optional,Literal
+from datetime import date
+from fastapi import Query
+
 @router.get("/users/", response_model=UserListResponse, tags=["User Management Requires (Admin or Manager Roles)"])
 async def list_users(
     request: Request,
-    skip: int = 0,
-    limit: int = 10,
+    skip: int = Query(0, description="Number of records to skip for pagination"),
+    limit: int = Query(10, description="Maximum number of users to return"),
+    email: Optional[str] = Query(None, description="Search users by email address"),
+    nickname: Optional[str] = Query(None, description="Search users by nickname"),
+    role: Optional[UserRole] = Query(None, description="Filter users by role: AUTHENTICATED,ANONYMOUS,ADMIN"),
+    is_locked: Optional[Literal[True, False]] = Query(None, description="Filter by account lock status (true/false)"),
+    is_professional: Optional[Literal[True, False]] = Query(None, description="Filter users by professional status (true/false)"),
+    registered_from: Optional[date] = Query(None, description="Start date for registration filter (YYYY-MM-DD)"),
+    registered_to: Optional[date] = Query(None, description="End date for registration filter (YYYY-MM-DD)"),
+    sort_by: str = Query("created_at", description="Sort by field (e.g. email, nickname, created_at)", example="email"),
+    order: str = Query("desc", description="Sort order (asc or desc)", example="asc"),
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(require_role(["ADMIN", "MANAGER"]))
 ):
-    total_users = await UserService.count(db)
-    users = await UserService.list_users(db, skip, limit)
+    total_users, users = await UserService.search_users(
+        session=db,
+        skip=skip,
+        limit=limit,
+        email=email,
+        nickname=nickname,
+        role=role,
+        is_locked=is_locked,
+        is_professional=is_professional,
+        registered_from=registered_from,
+        registered_to=registered_to,
+        sort_by=sort_by,
+        order=order
+    )
 
-    user_responses = [
-        UserResponse.model_validate(user) for user in users
-    ]
-    
+    user_responses = [UserResponse.model_validate(user) for user in users]
     pagination_links = generate_pagination_links(request, skip, limit, total_users)
-    
-    # Construct the final response with pagination details
+
     return UserListResponse(
         items=user_responses,
         total=total_users,
         page=skip // limit + 1,
         size=len(user_responses),
-        links=pagination_links  # Ensure you have appropriate logic to create these links
+        links=pagination_links
     )
-
 
 @router.post("/register/", response_model=UserResponse, tags=["Login and Registration"])
 async def register(user_data: UserCreate, session: AsyncSession = Depends(get_db), email_service: EmailService = Depends(get_email_service)):
