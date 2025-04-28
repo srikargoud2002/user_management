@@ -10,7 +10,7 @@
 Docker failed to start using docker compose up --build.
 This was resolved by updating the Dockerfile to allow specific downgrades and completing the initial setup successfully.
 
-[See the issue][(https://github.com/jincheng411/user_management/issues/11)](https://github.com/srikargoud2002/user_management/commit/7eb810407cb99fbf738d163e421f8171dd3aba50)
+[See the issue](https://github.com/srikargoud2002/user_management/commit/7eb810407cb99fbf738d163e421f8171dd3aba50)
 
 ### Issue 2: Nickname Generation Issue
 
