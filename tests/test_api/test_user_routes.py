@@ -2,7 +2,7 @@ import pytest
 from httpx import AsyncClient
 from uuid import uuid4
 from urllib.parse import urlencode
-
+from unittest.mock import AsyncMock, patch
 
 @pytest.mark.asyncio
 async def test_create_user_success(async_client, admin_token):
@@ -12,7 +12,10 @@ async def test_create_user_success(async_client, admin_token):
         "nickname": "newuser",
         "role": "AUTHENTICATED"
     }
-    response = await async_client.post("/users/", json=payload, headers={"Authorization": f"Bearer {admin_token}"})
+    
+    with patch("app.services.email_service.EmailService.send_verification_email", new_callable=AsyncMock):
+        response = await async_client.post("/users/", json=payload, headers={"Authorization": f"Bearer {admin_token}"})
+        
     assert response.status_code == 201
     assert response.json()["email"] == "newuser@example.com"
 
