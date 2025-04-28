@@ -2,7 +2,8 @@
 
 ### Docker image on docker hub: [Docker Link](https://hub.docker.com/r/srikar2020/user_management/tags)
 
-![image](https://github.com/user-attachments/assets/3f9d9c08-fc21-4cd8-9b5d-3ccf212777be)
+![image](https://github.com/user-attachments/assets/64cdaae0-2887-45cd-865f-09a7c67c0a57)
+
 
 
 ### Issue 1: Docker compose start fail
