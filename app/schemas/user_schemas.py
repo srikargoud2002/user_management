@@ -37,6 +37,27 @@ class UserCreate(UserBase):
     email: EmailStr = Field(..., example="john.doe@example.com")
     password: str = Field(..., example="Secure*1234")
 
+    @validator("password")
+    def validate_password_strength(cls, v):
+        errors = []
+
+        if len(v) < 8:
+            errors.append("at least 8 characters")
+        if not re.search(r"[A-Z]", v):
+            errors.append("an uppercase letter")
+        if not re.search(r"[a-z]", v):
+            errors.append("a lowercase letter")
+        if not re.search(r"[0-9]", v):
+            errors.append("a digit")
+        if not re.search(r"[\W_]", v):  # \W matches any non-alphanumeric character
+            errors.append("a special character")
+
+        if errors:
+            raise ValueError(f"Password must contain {', '.join(errors)}.")
+
+        return v
+
+
 class UserUpdate(UserBase):
     email: Optional[EmailStr] = Field(None, example="john.doe@example.com")
     nickname: Optional[str] = Field(None, min_length=3, pattern=r'^[\w-]+$', example="john_doe123")
