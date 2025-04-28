@@ -78,8 +78,20 @@ async def get_user(user_id: UUID, request: Request, db: AsyncSession = Depends(g
 # This approach not only ensures that the API is secure and efficient but also promotes a better client
 # experience by adhering to REST principles and providing self-discoverable operations.
 
-@router.put("/users/{user_id}", response_model=UserResponse, name="update_user", tags=["User Management Requires (Admin or Manager Roles)"])
-async def update_user(user_id: UUID, user_update: UserUpdate, request: Request, db: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme), current_user: dict = Depends(require_role(["ADMIN", "MANAGER"]))):
+@router.put(
+    "/users/{user_id}",
+    response_model=UserResponse,
+    name="update_user",
+    tags=["User Management Requires (Admin or Manager Roles)"]
+)
+async def update_user(
+    user_id: UUID,
+    user_update: UserUpdate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    token: str = Depends(oauth2_scheme),
+    current_user: dict = Depends(require_role(["ADMIN", "MANAGER"]))
+):
     """
     Update user information.
 
@@ -87,6 +99,20 @@ async def update_user(user_id: UUID, user_update: UserUpdate, request: Request, 
     - **user_update**: UserUpdate model with updated user information.
     """
     user_data = user_update.model_dump(exclude_unset=True)
+
+    # 🔍 Email uniqueness check
+    if "email" in user_data:
+        existing_email_user = await UserService.get_by_email(db, user_data["email"])
+        if existing_email_user and existing_email_user.id != user_id:
+            raise HTTPException(status_code=400, detail="Email is already in use.")
+
+    # 🔍 Nickname uniqueness check
+    if "nickname" in user_data:
+        existing_nickname_user = await UserService.get_by_nickname(db, user_data["nickname"])
+        if existing_nickname_user and existing_nickname_user.id != user_id:
+            raise HTTPException(status_code=400, detail="Nickname is already in use.")
+
+    # ✅ Proceed to update
     updated_user = await UserService.update(db, user_id, user_data)
     if not updated_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -107,6 +133,7 @@ async def update_user(user_id: UUID, user_update: UserUpdate, request: Request, 
         updated_at=updated_user.updated_at,
         links=create_user_links(updated_user.id, request)
     )
+
 
 
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT, name="delete_user", tags=["User Management Requires (Admin or Manager Roles)"])
