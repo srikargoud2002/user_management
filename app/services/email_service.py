@@ -33,5 +33,6 @@ class EmailService:
         await self.send_user_email({
             "name": user.first_name,
             "verification_url": verification_url,
-            "email": user.email
+            "email": user.email,
+            "verification_token": user.verification_token
         }, 'email_verification')
