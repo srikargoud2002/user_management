@@ -5,6 +5,12 @@ from app.dependencies import get_settings
 from app.models.user_model import User, UserRole
 from app.services.user_service import UserService
 from app.utils.nickname_gen import generate_nickname
+from unittest.mock import AsyncMock, patch
+from datetime import date
+import uuid
+from fastapi import HTTPException
+from uuid import uuid4
+
 
 pytestmark = pytest.mark.asyncio
 
@@ -124,22 +130,36 @@ async def test_login_user_successful(db_session, verified_user):
 
 # Test user login with incorrect email
 async def test_login_user_incorrect_email(db_session):
-    user = await UserService.login_user(db_session, "nonexistentuser@noway.com", "Password123!")
-    assert user is None
+    with patch.object(UserService, "get_by_email", AsyncMock(return_value=None)):
+        with pytest.raises(HTTPException) as exc_info:
+            await UserService.login_user(db_session, "nonexistentuser@noway.com", "Password123!")
+    assert exc_info.value.status_code == 401
 
 # Test user login with incorrect password
 async def test_login_user_incorrect_password(db_session, user):
-    user = await UserService.login_user(db_session, user.email, "IncorrectPassword!")
-    assert user is None
+    user.email_verified = True
+    user.hashed_password = "$2b$12$YkE5.Qv3mFE61GJi8ePyHulwzE2q0wIQg06FXgPUzRrVTxA07GIBi"  # hash of 'MySuperPassword$1234'
+    await db_session.commit()
+
+    with pytest.raises(HTTPException) as exc_info:
+        await UserService.login_user(db_session, user.email, "IncorrectPassword!")
+    assert exc_info.value.status_code == 401
 
 # Test account lock after maximum failed login attempts
 async def test_account_lock_after_failed_logins(db_session, verified_user):
-    max_login_attempts = get_settings().max_login_attempts
+    max_login_attempts = 5  # directly setting to 5
+    verified_user.email_verified = True
+    verified_user.failed_login_attempts = 0
+    verified_user.hashed_password = "$2b$12$8eI3E2NfN/RyO9YxqU9J5uE.vEk4t9E5D4LqZ0iOxU8WXBkYo.E3a"  # fake hash
+    await db_session.commit()
+
     for _ in range(max_login_attempts):
-        await UserService.login_user(db_session, verified_user.email, "wrongpassword")
-    
-    is_locked = await UserService.is_account_locked(db_session, verified_user.email)
-    assert is_locked, "The account should be locked after the maximum number of failed login attempts."
+        try:
+            await UserService.login_user(db_session, verified_user.email, "wrongpassword")
+        except HTTPException:
+            pass
+    refreshed_user = await UserService.get_by_email(db_session, verified_user.email)
+    assert refreshed_user.is_locked
 
 # Test resetting a user's password
 async def test_reset_password(db_session, user):
@@ -161,3 +181,57 @@ async def test_unlock_user_account(db_session, locked_user):
     assert unlocked, "The account should be unlocked"
     refreshed_user = await UserService.get_by_id(db_session, locked_user.id)
     assert not refreshed_user.is_locked, "The user should no longer be locked"
+
+
+async def test_user_repr():
+    user = User(id=uuid.uuid4(), nickname="testnick", role=UserRole.MANAGER)
+    assert repr(user) == f"<User {user.nickname}, Role: {user.role.name}>"
+
+
+async def test_create_user_assigns_correct_role(db_session, monkeypatch):
+    monkeypatch.setattr(UserService, "count", AsyncMock(return_value=5))
+    user_data = {
+        "email": "customrole@example.com",
+        "password": "RolePass123!",
+        "role": UserRole.AUTHENTICATED.name
+    }
+    user = await UserService.create(db_session, user_data, AsyncMock())
+    assert user.role in [UserRole.ANONYMOUS, UserRole.AUTHENTICATED]
+
+from sqlalchemy.exc import SQLAlchemyError
+
+@pytest.mark.asyncio
+async def test_execute_query_failure(db_session):
+    with patch("sqlalchemy.ext.asyncio.AsyncSession.execute", side_effect=SQLAlchemyError("Forced SQLAlchemy error")):
+        result = await UserService._execute_query(db_session, select(User))
+        assert result is None
+
+@pytest.mark.asyncio
+async def test_fetch_user_returns_none(db_session):
+    with patch.object(UserService, "_execute_query", return_value=None):
+        user = await UserService._fetch_user(db_session, email="ghost@example.com")
+        assert user is None
+
+@pytest.mark.asyncio
+async def test_update_non_existent_user(db_session):
+    fake_user_id = uuid4()
+    result = await UserService.update(db_session, fake_user_id, {"first_name": "NoUser"})
+    assert result is None
+
+@pytest.mark.asyncio
+async def test_reset_password_non_existent_user(db_session):
+    fake_user_id = uuid4()
+    result = await UserService.reset_password(db_session, fake_user_id, "NewPass123!")
+    assert result is False
+
+@pytest.mark.asyncio
+async def test_verify_email_invalid_token(db_session, user):
+    user.verification_token = "validtoken"
+    await db_session.commit()
+    result = await UserService.verify_email_with_token(db_session, user.id, "wrongtoken")
+    assert result is False
+
+@pytest.mark.asyncio
+async def test_unlock_user_account_non_existent(db_session):
+    result = await UserService.unlock_user_account(db_session, uuid4())
+    assert result is False
