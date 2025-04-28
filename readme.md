@@ -1,53 +1,128 @@
+# The User Management System Final Project:🎉✨🔥
+
+### Docker image on docker hub: [Docker Link](https://hub.docker.com/r/srikar2020/user_management/tags)
+
+![image](https://github.com/user-attachments/assets/3f9d9c08-fc21-4cd8-9b5d-3ccf212777be)
 
 
-# The User Management System Final Project: Your Epic Coding Adventure Awaits! 🎉✨🔥
+### Issue 1: Docker compose start fail
 
-## Introduction: Buckle Up for the Ride of a Lifetime 🚀🎬
+Docker failed to start using docker compose up --build.
+This was resolved by updating the Dockerfile to allow specific downgrades and completing the initial setup successfully.
 
-Welcome to the User Management System project - an epic open-source adventure crafted by the legendary Professor Keith Williams for his rockstar students at NJIT! 🏫👨‍🏫⭐ This project is your gateway to coding glory, providing a bulletproof foundation for a user management system that will blow your mind! 🤯 You'll bridge the gap between the realms of seasoned software pros and aspiring student developers like yourselves. 
+[See the issue][(https://github.com/jincheng411/user_management/issues/11)](https://github.com/srikargoud2002/user_management/commit/7eb810407cb99fbf738d163e421f8171dd3aba50)
 
-### [Instructor Video - Project Overview and Tips](https://youtu.be/gairLNAp6mA) 🎥
+### Issue 2: Nickname Generation Issue
 
-- [Introduction to the system features and overview of the project - please read](system_documentation.md) 📚
-- [Project Setup Instructions](setup.md) ⚒️
-- [Features to Select From](features.md) 🛠️
-- [About the Project](about.md)🔥🌟
+Previously, a nickname was always generated even if the user provided one manually during registration.
+Now, a nickname is generated only when the user does not provide it.
 
-## Goals and Objectives: Unlock Your Coding Superpowers 🎯🏆🌟
+[See the Issue](https://github.com/srikargoud2002/user_management/issues/2)
 
-Get ready to ascend to new heights with this legendary project:
+### Issue 3: Password is not meeting the standard
 
-1. **Practical Experience**: Dive headfirst into a real-world codebase, collaborate with your teammates, and contribute to an open-source project like a seasoned pro! 💻👩‍💻🔥
-2. **Quality Assurance**: Develop ninja-level skills in identifying and resolving bugs, ensuring your code quality and reliability are out of this world. 🐞🔍⚡
-3. **Test Coverage**: Write additional tests to cover edge cases, error scenarios, and important functionalities - leave no stone unturned and no bug left behind! ✅🧪🕵️‍♂️
-4. **Feature Implementation**: Implement a brand new, mind-blowing feature and make your epic mark on the project, following best practices for coding, testing, and documentation like a true artisan. ✨🚀🎆
-5. **Collaboration**: Foster teamwork and collaboration through code reviews, issue tracking, and adhering to contribution guidelines - teamwork makes the dream work, and together you'll conquer worlds! 🤝💪🌍
-6. **Industry Readiness**: Prepare for the software industry by working on a project that simulates real-world development scenarios - level up your skills to super hero status  and become an unstoppable coding force! 🔝🚀🏆⚡
+Strengthened password security by enforcing stricter rules:
 
-## Submission and Grading: Your Chance to Shine 📝✏️📈
+Minimum 8 characters
 
-1. **Reflection Document**: Submit a 1-2 page Word document reflecting on your learnings throughout the course and your experience working on this epic project. Include links to the closed issues for the **5 QA issues, 10 NEW tests, and 1 Feature** you'll be graded on. Make sure your project successfully deploys to DockerHub and include a link to your Docker repository in the document - let your work speak for itself! 📄🔗💥
+- At least one uppercase letter
 
-2. **Commit History**: Show off your consistent hard work through your commit history like a true coding warrior. **Projects with less than 10 commits will get an automatic 0 - ouch!** 😬⚠️ A significant part of your project's evaluation will be based on your use of issues, commits, and following a professional development process like a boss - prove your coding prowess! 💻🔄🔥
+- At least one lowercase letter
 
-3. **Deployability**: Broken projects that don't deploy to Dockerhub or pass all the automated tests on GitHub actions will face point deductions - nobody likes a buggy app! 🐞☠️ Show the world your flawless coding skills!
+- At least one digit
 
-## Managing the Project Workload: Stay Focused, Stay Victorious ⏱️🧠⚡
+- At least one special character
 
-This project requires effective time management and a well-planned strategy, but fear not - you've got this! Follow these steps to ensure a successful (and sane!) project outcome:
 
-1. **Select a Feature**: [Choose a feature](features.md) from the provided list of additional improvements that sparks your interest and aligns with your goals like a laser beam. ✨⭐🎯 This is your chance to shine!
+[See the issue](https://github.com/srikargoud2002/user_management/issues/6)
 
-2. **Quality Assurance (QA)**: Thoroughly test the system's major functionalities related to your chosen feature and identify at least 5 issues or bugs like a true detective. Create GitHub issues for each identified problem, providing detailed descriptions and steps to reproduce - the more detail, the merrier! 🔍🐞🕵️‍♀️ Leave no stone unturned!
+### Issue 4: Updation Error:
 
-3. **Test Coverage Improvement**: Review the existing test suite and identify gaps in test coverage like a pro. Create 10 additional tests to cover edge cases, error scenarios, and important functionalities related to your chosen feature. Focus on areas such as user registration, login, authorization, and database interactions. Simulate the setup of the system as the admin user, then creating users, and updating user accounts - leave no stone unturned, no bug left behind! ✅🧪🔍🔬 Become the master of testing!
+When ADMIN tries to Update the email or nickname it is causing the code to break when they are already existing. So added additional Validation Checks for both email and nickname.
 
-4. **New Feature Implementation**: Implement your chosen feature, following the project's coding practices and architecture like a coding ninja. Write appropriate tests to ensure your new feature is functional and reliable like a rock. Document the new feature, including its usage, configuration, and any necessary migrations - future you will thank you profusely! 🚀✨📝👩‍💻⚡ Make your mark on this project!
+[See the issue](https://github.com/srikargoud2002/user_management/issues/8)
 
-5. **Maintain a Working Main Branch**: Throughout the project, ensure you always have a working main branch deploying to Docker like a well-oiled machine. This will prevent any last-minute headaches and ensure a smooth submission process - no tears allowed, only triumphs! 😊🚢⚓ Stay focused, stay victorious!
+### Issue 5: Validation Token Not being Sent to email for manual verification  
 
-Remember, it's more important to make something work reliably and be reasonably complete than to implement an overly complex feature. Focus on creating a feature that you can build upon or demonstrate in an interview setting - show off your skills like a rockstar! 💪🚀🎓
+After registration, only a link was sent to verify email, without exposing the actual verification token.
+Added logic to include the verification token for manual verification as well.
 
-Don't forget to always have a working main branch deploying to Docker at all times. If you always have a working main branch, you will never be in jeopardy of receiving a very disappointing grade :-). Keep that main branch shining bright!
+[See the issue](https://github.com/srikargoud2002/user_management/issues/11)
 
-Let's embark on this epic coding adventure together and conquer the world of software engineering! You've got this, coding rockstars! 🚀🌟✨
+![image](https://github.com/user-attachments/assets/f3fcc7fc-132b-41ea-94e4-321b1825ecb2)
+
+
+### Issue 6: Unverified Users Login Issue
+
+When unverified users attempted to log in, the code is breaking with wrong error and not giving why to the user.
+Added a clear error response instructing users to verify their account before logging in.
+
+[See the issue](https://github.com/srikargoud2002/user_management/issues/13)
+
+
+## 🚀 Feature Implemented: Advanced User Search and Filtering (Admin/Manager Access)
+
+A powerful **search and filter** feature was implemented for **admin** and **manager** roles to easily manage users in the system.  
+This functionality supports **dynamic filtering, pagination, and sorting** based on user attributes.
+
+### ✨ Key Capabilities:
+
+- **Pagination**:  
+  Supports `skip` and `limit` parameters to efficiently paginate large sets of users.
+  
+- **Filtering Options**:
+  - **Email**: Partial matches using `email contains`.
+  - **Nickname**: Partial matches using `nickname contains`.
+  - **Role**: Filter by specific role (`ADMIN`, `MANAGER`, `AUTHENTICATED`, `ANONYMOUS`).
+  - **Account Status**: Filter users based on whether their account is **locked**.
+  - **Professional Status**: Filter users based on their **professional** profile flag.
+  - **Registration Date Range**:  
+    - Filter users **registered after** (`registered_from`) a certain date.
+    - Filter users **registered before** (`registered_to`) a certain date.
+
+- **Sorting**:
+  - Sort users by fields like `email`, `nickname`, `created_at`, `updated_at`, `first_name`, and `last_name`.
+  - Choose sort **order** (`asc` for ascending, `desc` for descending).
+  - Defaults to sorting by `created_at` in descending order if no valid field is provided.
+
+- **Secure Role-Based Access Control**:
+  - Only users with `ADMIN` or `MANAGER` roles are allowed to use this API endpoint.
+
+- **Robust Error Handling**:
+  - Invalid sort fields gracefully fall back to default.
+  - Query failures are safely logged without crashing the application.
+
+![image](https://github.com/user-attachments/assets/21c928cf-69b7-4c65-aa56-88c91b7b6909)
+![image](https://github.com/user-attachments/assets/d8d33694-5f83-4b14-b31a-2334e45cddae)
+
+
+
+
+
+### Test cases implemented
+
+test_create_user_success, test_create_user_duplicate_email, test_get_user_success, test_get_user_not_found, test_update_user_success, test_update_user_not_found, test_delete_user_success, test_delete_user_not_found, test_list_users_success, test_register_user_success, test_register_user_conflict, test_login_success, test_login_failure, test_verify_email_success, test_verify_email_failure_invalid_token, test_login_failure_locked_account, test_login_unverified_user, test_setup_logging, test_login_user_incorrect_email, test_login_user_incorrect_password, test_account_lock_after_failed_logins, test_user_repr, test_create_user_assigns_correct_role, test_execute_query_failure, test_fetch_user_returns_none, test_update_non_existent_user, test_reset_password_non_existent_user, test_verify_email_invalid_token, test_unlock_user_account_non_existent, test_validate_email_address_valid, test_validate_email_address_invalid
+
+Added more than **30+** Test Cases taking the test coverage to near 87%. [Link to the Commit :](https://github.com/srikargoud2002/user_management/commit/2a5f4ab8bb5240bf3ce764bdbcf23109bc2f7c48)
+
+
+![image](https://github.com/user-attachments/assets/d8d32ad7-f816-41f4-a866-5c7782b40483)
+
+
+### Reflection about this Course
+
+Throughout this course on Python programming and web development, I have seen significant growth in both technical skills and professional development.
+
+Learning Python laid a strong foundation for working with data from handling CSV files and querying SQL databases to interacting with RESTful web services. Working with FastAPI was a key milestone, showing me how to efficiently build high-performance web applications and deepening my understanding of backend development.
+
+Version control with Git became an essential part of my workflow, teaching me best practices for collaboration and code management. Emphasis on code readability and industry standards helped me appreciate the importance of writing clean, maintainable software.
+
+The course strengthened my grasp of object-oriented programming (OOP), helping me build modular, reusable code. Exposure to Agile methodologies further taught me how to work iteratively and adapt to changing requirements. Learning SQL and ORM patterns added another valuable skill set, enabling me to bridge application logic with efficient database design.
+
+One of the biggest takeaways was improving my problem-solving skills — learning to debug effectively, research independently, and persist through technical challenges.
+
+Overall, this course provided a strong, practical education in Python and web development, integrating tools like VS Code, Pytest, and REST APIs. Most importantly, it built a resilient, solution-focused mindset that will be critical in my future career in data programming and backend development.
+
+
+
+
