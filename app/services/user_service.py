@@ -156,10 +156,12 @@ class UserService:
     async def login_user(cls, session: AsyncSession, email: str, password: str) -> Optional[User]:
         user = await cls.get_by_email(session, email)
         if user:
-            if user.email_verified is False:
-                return None
+            if not user.email_verified:
+                raise HTTPException(status_code=403, detail="Email not verified. Please check your inbox for a verification link.")
+
             if user.is_locked:
-                return None
+                raise HTTPException(status_code=403, detail="Your account is locked due to too many failed login attempts.")
+
             if verify_password(password, user.hashed_password):
                 user.failed_login_attempts = 0
                 user.last_login_at = datetime.now(timezone.utc)
@@ -172,7 +174,9 @@ class UserService:
                     user.is_locked = True
                 session.add(user)
                 await session.commit()
-        return None
+
+        raise HTTPException(status_code=401, detail="Incorrect email or password.")
+
 
     @classmethod
     async def is_account_locked(cls, session: AsyncSession, email: str) -> bool:
